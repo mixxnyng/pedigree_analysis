@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상염색체 열성 가계도 시뮬레이터</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e1e4e8; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 24px; color: #2c3e50; }
+        
+        /* 레이아웃 구조 */
+        .main-layout { display: flex; gap: 20px; }
+        .sidebar { width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: fit-content; }
+        .content { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+        
+        /* 컨트롤 스타일 */
+        .control-group { margin-bottom: 15px; }
+        .control-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .control-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        button:hover { background-color: #2980b9; }
+
+        /* 대시보드 메트릭 */
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .metric-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #3498db; }
+        .metric-card.accuracy { border-left-color: #2ecc71; }
+        .metric-title { font-size: 12px; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; }
+        .metric-value { font-size: 20px; font-weight: bold; color: #2c3e50; }
+
+        /* 탭 구조 */
+        .tabs { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid #ccc; }
+        .tab-btn { background: none; color: #7f8c8d; border: none; width: auto; padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: #2c3e50; border-bottom-color: #3498db; }
+        .tab-content { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .tab-content.active { display: block; }
+
+        #pedigree-plot { width: 100%; height: 650px; }
+        .charts-row { display: flex; gap: 20px; }
+        .chart-box { flex: 1; min-height: 350px; }
+        
+        /* 테이블 스타일 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e1e4e8; font-size: 14px; }
+        th { background-color: #f8f9fa; color: #2c3e50; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🧬 상염색체 가계도 시뮬레이터 & 유전 데이터 분석기</h1>
+    </header>
+
+    <div class="main-layout">
+        <div class="sidebar">
+            <h3 style="margin-top:0; color:#2c3e50;">🎮 컨트롤 센터</h3>
+            <hr style="border:0; border-top:1px solid #eee; margin-bottom:15px;">
+            <div class="control-group">
+                <label for="seed">유전 시드 (Seed)</label>
+                <input type="number" id="seed" value="45">
+            </div>
+            <div class="control-group">
+                <label for="gens">가계도 추적 세대수</label>
+                <input type="number" id="gens" value="4" min="2" max="5">
+            </div>
+            <div class="control-group">
+                <label for="min-kids">부부당 최소 자녀</label>
+                <input type="number" id="min-kids" value="2" min="1" max="3">
+            </div>
+            <div class="control-group">
+                <label for="max-kids">부부당 최대 자녀</label>
+                <input type="number" id="max-kids" value="3" min="1" max="4">
+            </div>
+            <button onclick="initSimulation()">시뮬레이션 실행</button>
+        </div>
+
+        <div class="content">
+            <div class="metrics-grid">
+                <div class="metric-card"><div class="metric-title">총 인구 규모</div><div class="metric-value" id="m-total">0명</div></div>
+                <div class="metric-card"><div class="metric-title">발병 환자 (남 / 여)</div><div class="metric-value" id="m-affected">남: 0 / 여: 0</div></div>
+                <div class="metric-card"><div class="metric-title">실제 보인자 (남 / 여)</div><div class="metric-value" id="m-carrier">남: 0 / 여: 0</div></div>
+                <div class="metric-card accuracy"><div class="metric-title">DFS 알고리즘 정확도</div><div class="metric-value" id="m-accuracy">0.0%</div></div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab(event, 'tab-pedigree')">🌿 가계도 네트워크 구조도</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-report')">📊 유전 데이터 분석 리포트</button>
+            </div>
+
+            <div id="tab-pedigree" class="tab-content active">
+                <div id="pedigree-plot"></div>
+            </div>
+
+            <div id="tab-report" class="tab-content">
+                <div class="charts-row">
+                    <div id="pie-chart" class="chart-box"></div>
+                    <div id="bar-chart" class="chart-box"></div>
+                </div>
+                <h3>📋 개체별 유전형 및 알고리즘 판별 리스트</h3>
+                <div style="overflow-x:auto;">
+                    <table id="data-table">
+                        <thead>
+                            <tr>
+                                <th>가계도 ID</th><th>세대</th><th>성별</th><th>실제 유전자형</th><th>표현형 상태</th><th>추론 확률</th><th>실제 보인자 여부</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(evt, tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+        window.dispatchEvent(new Event('resize'));
+    }
+
+    function mulberry32(a) {
+        return function() {
+          let t = a += 0x6D2B79F5;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        }
+    }
+
+    let nextId = 0;
+    let people = {};
+    let childrenMap = {};
+    let parentsMap = {};
+
+    function addPerson(sex, genotype, generation) {
+        let pid = nextId++;
+        let sortedGenotype = [...genotype].sort();
+        let phenotype = (sortedGenotype[0] === 'a' && sortedGenotype[1] === 'a') ? 'Affected' : 'Unaffected';
+        let trueCarrier = (sortedGenotype.join('') === 'Aa');
+        
+        people[pid] = { pid, sex, genotype: sortedGenotype, generation, phenotype, trueCarrier };
+        childrenMap[pid] = [];
+        parentsMap[pid] = [];
+        return pid;
+    }
+
+    function addParentChild(pId, cId) {
+        if(!childrenMap[pId].includes(cId)) childrenMap[pId].push(cId);
+        if(!parentsMap[cId].includes(pId)) parentsMap[cId].push(pId);
+    }
+
+    function initSimulation() {
+        nextId = 0; people = {}; childrenMap = {}; parentsMap = {};
+        
+        let seed = parseInt(document.getElementById('seed').value) || 45;
+        let nGens = parseInt(document.getElementById('gens').value) || 4;
+        let minKids = parseInt(document.getElementById('min-kids').value) || 1;
+        let maxKids = parseInt(document.getElementById('max-kids').value) || 3;
+        if (minKids > maxKids) maxKids = minKids;
+
+        let rand = mulberry32(seed);
+        let familyUnits = [];
+
+        let fId = addPerson('M', ['A', 'a'], 0);
+        let mId = addPerson('F', ['A', 'a'], 0);
+        let currentGenCouples = [[fId, mId]];
+
+        for (let gen = 1; gen < nGens; gen++) {
+            let nextGenCouples = [];
+            for (let [fatherId, motherId] of currentGenCouples) {
+                let nKids = Math.floor(rand() * (maxKids - minKids + 1)) + minKids;
+                let kidsIds = [];
+
+                for (let k = 0; k < nKids; k++) {
+                    let sex = rand() < 0.5 ? 'M' : 'F';
+                    let pGene = people[fatherId].genotype[rand() < 0.5 ? 0 : 1];
+                    let mGene = people[motherId].genotype[rand() < 0.5 ? 0 : 1];
+                    
+                    let childId = addPerson(sex, [pGene, mGene], gen);
+                    addParentChild(fatherId, childId);
+                    addParentChild(motherId, childId);
+                    kidsIds.push(childId);
+
+                    if (gen < nGens - 1) {
+                        let spouseSex = sex === 'M' ? 'F' : 'M';
+                        let r = rand();
+                        let spouseG = r < 0.05 ? ['a', 'a'] : (r < 0.35 ? ['A', 'a'] : ['A', 'A']);
+                        let spouseId = addPerson(spouseSex, spouseG, gen);
+
+                        if (sex === 'M') nextGenCouples.push([childId, spouseId]);
+                        else nextGenCouples.push([spouseId, childId]);
+                    }
+                }
+                if (kidsIds.length > 0) familyUnits.push([gen - 1, fatherId, motherId, kidsIds]);
+            }
+            currentGenCouples = nextGenCouples;
+            if (currentGenCouples.length === 0) break;
+        }
+
+        let inferred = {};
+        let affectedIds = Object.keys(people).filter(pid => people[pid].phenotype === 'Affected');
+        
+        for (let affId of affectedIds) {
+            let stack = parentsMap[affId].map(p => [p, 1.0]);
+            let visited = new Set();
+            while(stack.length > 0) {
+                let [pid, prob] = stack.pop();
+                if (visited.has(pid)) continue;
+                visited.add(pid);
+                inferred[pid] = Math.max(inferred[pid] || 0.0, prob);
+
+                if (parentsMap[pid]) {
+                    for (let pId of parentsMap[pid]) {
+                        if (!visited.has(pId)) stack.push([pId, prob * 0.5]);
+                        if (childrenMap[pId]) {
+                            for (let sibId of childrenMap[pId]) {
+                                if (!visited.has(sibId) && sibId != pid) stack.push([sibId, prob * 0.5]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        updateDashboardAndCharts(familyUnits, inferred);
+    }
+
+    function updateDashboardAndCharts(familyUnits, inferred) {
+        let pList = Object.values(people);
+        let nTotal = pList.length;
+        let affM = pList.filter(p => p.phenotype === 'Affected' && p.sex === 'M').length;
+        let affF = pList.filter(p => p.phenotype === 'Affected' && p.sex === 'F').length;
+        let carM = pList.filter(p => p.trueCarrier && p.sex === 'M').length;
+        let carF = pList.filter(p => p.trueCarrier && p.sex === 'F').length;
+
+        let tp = 0, fp = 0, tn = 0, fn = 0;
+        pList.forEach(p => {
+            let pred = (inferred[p.pid] || 0.0) >= 0.5;
+            if (pred && p.trueCarrier) tp++;
+            else if (pred && !p.trueCarrier) fp++;
+            else if (!pred && p.trueCarrier) fn++;
+            else tn++;
+        });
+        let accuracy = nTotal ? ((tp + tn) / nTotal) * 100 : 0;
+
+        document.getElementById('m-total').innerText = `${nTotal}명`;
+        document.getElementById('m-affected').innerText = `남: ${affM} / 여: ${affF}`;
+        document.getElementById('m-carrier').innerText = `남: ${carM} / 여: ${carF}`;
+        document.getElementById('m-accuracy').innerText = `${accuracy.toFixed(1)}%`;
+
+        let pos = {};
+        let genCounts = {};
+        pList.forEach(p => {
+            if(!genCounts[p.generation]) genCounts[p.generation] = 0;
+            pos[p.pid] = [genCounts[p.generation] * 5, -p.generation * 4];
+            genCounts[p.generation]++;
+        });
+
+        renderPlots(familyUnits, pos, inferred);
+    }
+
+    function renderPlots(familyUnits, pos, inferred) {
+        let edgeX = [], edgeY = [];
+        familyUnits.forEach(([gen, fId, mId, kids]) => {
+            if (!pos[fId] || !pos[mId]) return;
+            let [xf, yf] = pos[fId], [xm, ym] = pos[mId];
+            edgeX.push(xf, xm, null); edgeY.push(yf, ym, null);
+            let midX = (xf + xm) / 2;
+            kids.forEach(kId => {
+                if (!pos[kId]) return;
+                let [kx, ky] = pos[kId];
+                edgeX.push(midX, kx, null); edgeY.push(yf, ky, null);
+            });
+        });
+
+        let nodeGroups = {
+            "정상 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'white', line:{color:'#2c3e50', width:2}}},
+            "보인자 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'#f1c40f', line:{color:'#d35400', width:2}}},
+            "환자 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'#e74c3c', line:{color:'#c0392b', width:2}}},
+            "추론 보인자 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'white', line:{color:'#3498db', width:2}}},
+            "정상 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'white', line:{color:'#2c3e50', width:2}}},
+            "보인자 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'#f1c40f', line:{color:'#d35400', width:2}}},
+            "환자 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'#e74c3c', line:{color:'#c0392b', width:2}}},
+            "추론 보인자 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'white', line:{color:'#3498db', width:2}}}
+        };
+
+        let tableBody = "";
+        let typeCounts = {"정상":0, "보인자":0, "환자":0};
+        let genotypeCounts = {"AA":0, "Aa":0, "aa":0};
+
+        Object.values(people).forEach(p => {
+            let infProb = inferred[p.pid] || 0.0;
+            let isInfCarrier = infProb >= 0.5 && !p.trueCarrier && p.phenotype === 'Unaffected';
+            let cat = "";
+            let status = p.phenotype === 'Affected' ? '환자' : (p.trueCarrier ? '보인자' : '정상');
+            
+            typeCounts[status]++;
+            let gStr = p.genotype.join('');
+            genotypeCounts[gStr]++;
+
+            if(p.sex === 'M') {
+                cat = isInfCarrier ? "추론 보인자 남성" : (p.phenotype === 'Affected' ? "환자 남성" : (p.trueCarrier ? "보인자 남성" : "정상 남성"));
+            } else {
+                cat = isInfCarrier ? "추론 보인자 여성" : (p.phenotype === 'Affected' ? "환자 여성" : (p.trueCarrier ? "보인자 여성" : "정상 여성"));
+            }
+
+            if (pos[p.pid]) {
+                nodeGroups[cat].x.push(pos[p.pid][0]);
+                nodeGroups[cat].y.push(pos[p.pid][1]);
+                nodeGroups[cat].text.push(`ID: ${p.pid+1}<br>유전형: ${p.genotype.join('')}<br>표현형: ${p.phenotype}`);
+            }
+
+            tableBody += `<tr><td>${p.pid+1}</td><td>${p.generation+1}세대</td><td>${p.sex==='M'?'남성':'여성'}</td><td>${p.genotype.join('')}</td><td>${status}</td><td>${(infProb*100).toFixed(1)}%</td><td>${p.trueCarrier?'True':'False'}</td></tr>`;
+        });
+
+        document.querySelector("#data-table tbody").innerHTML = tableBody;
+
+        let traces = [{ x: edgeX, y: edgeY, mode: 'lines', line: {color: '#34495e', width: 2}, hoverinfo: 'none', showlegend: false }];
+        for(let [name, group] of Object.entries(nodeGroups)) {
+            if(group.x.length === 0) continue;
+            traces.push({
+                x: group.x, y: group.y, mode: 'markers', name: name, text: group.text, hoverinfo: 'text',
+                marker: Object.assign({size: 20}, group.marker)
+            });
+        }
+
+        Plotly.newPlot('pedigree-plot', traces, {
+            xaxis: {visible: false}, yaxis: {visible: false, scaleanchor: "x"},
+            plot_bgcolor: '#f8f9fa', margin: {l:20, r:20, t:20, b:20}, hovermode: 'closest'
+        });
+
+        Plotly.newPlot('pie-chart', [{
+            labels: Object.keys(typeCounts), values: Object.values(typeCounts), type: 'pie', hole: .4,
+            marker: {colors: ["#2ecc71", "#f1c40f", "#e74c3c"]}
+        }], {title: "가계 내 표현형 분포 비율", height: 350});
+
+        Plotly.newPlot('bar-chart', [{
+            x: Object.keys(genotypeCounts), y: Object.values(genotypeCounts), type: 'bar',
+            marker: {color: ["#34495e", "#f39c12", "#c0392b"]}
+        }], {title: "대립유전형 빈도 분석", height: 350});
+    }
+
+    window.onload = initSimulation;
+</script>
+</body>
+</html>
