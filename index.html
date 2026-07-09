@@ -8,40 +8,35 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f6f9; color: #333; }
         .container { max-width: 1400px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e1e4e8; padding-bottom: 15px; margin-bottom: 20px; }
-        h1 { margin: 0; font-size: 24px; color: #2c3e50; }
+        header { border-bottom: 2px solid #e1e4e8; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 22px; color: #2c3e50; }
         
-        /* 레이아웃 구조 */
-        .main-layout { display: flex; gap: 20px; }
-        .sidebar { width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: fit-content; }
-        .content { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+        .main-layout { display: flex; gap: 20px; align-items: flex-start; }
+        .sidebar { width: 300px; min-width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); box-sizing: border-box; }
+        .content { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
         
-        /* 컨트롤 스타일 */
         .control-group { margin-bottom: 15px; }
         .control-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
         .control-group input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; transition: background 0.2s; }
-        button:hover { background-color: #2980b9; }
+        button.run-btn { width: 100%; padding: 10px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; }
+        button.run-btn:hover { background-color: #2980b9; }
 
-        /* 대시보드 메트릭 */
         .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
         .metric-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #3498db; }
         .metric-card.accuracy { border-left-color: #2ecc71; }
         .metric-title { font-size: 12px; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px; }
-        .metric-value { font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .metric-value { font-size: 18px; font-weight: bold; color: #2c3e50; }
 
-        /* 탭 구조 */
-        .tabs { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid #ccc; }
-        .tab-btn { background: none; color: #7f8c8d; border: none; width: auto; padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 0; border-bottom: 1px solid #ccc; }
+        .tab-btn { background: none; color: #7f8c8d; border: none; padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px; font-weight: bold; }
         .tab-btn.active { color: #2c3e50; border-bottom-color: #3498db; }
-        .tab-content { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .tab-content { display: none; background: white; padding: 20px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .tab-content.active { display: block; }
 
-        #pedigree-plot { width: 100%; height: 650px; }
-        .charts-row { display: flex; gap: 20px; }
-        .chart-box { flex: 1; min-height: 350px; }
+        #pedigree-plot { width: 100%; height: 650px; border: 1px solid #e1e4e8; border-radius: 6px; }
+        .charts-row { display: flex; gap: 20px; margin-bottom: 20px; }
+        .chart-box { flex: 1; min-height: 350px; border: 1px solid #e1e4e8; border-radius: 6px; padding: 10px; }
         
-        /* 테이블 스타일 */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e1e4e8; font-size: 14px; }
         th { background-color: #f8f9fa; color: #2c3e50; }
@@ -51,12 +46,12 @@
 
 <div class="container">
     <header>
-        <h1>🧬 상염색체 가계도 시뮬레이터 & 유전 데이터 분석기</h1>
+        <h1>상염색체 가계도 시뮬레이터 및 유전 데이터 분석기</h1>
     </header>
 
     <div class="main-layout">
         <div class="sidebar">
-            <h3 style="margin-top:0; color:#2c3e50;">🎮 컨트롤 센터</h3>
+            <h3 style="margin-top:0; color:#2c3e50;">컨트롤 센터</h3>
             <hr style="border:0; border-top:1px solid #eee; margin-bottom:15px;">
             <div class="control-group">
                 <label for="seed">유전 시드 (Seed)</label>
@@ -64,17 +59,17 @@
             </div>
             <div class="control-group">
                 <label for="gens">가계도 추적 세대수</label>
-                <input type="number" id="gens" value="4" min="2" max="5">
+                <input type="number" id="gens" value="5" min="2" max="12">
             </div>
             <div class="control-group">
                 <label for="min-kids">부부당 최소 자녀</label>
-                <input type="number" id="min-kids" value="2" min="1" max="3">
+                <input type="number" id="min-kids" value="1" min="1" max="3">
             </div>
             <div class="control-group">
                 <label for="max-kids">부부당 최대 자녀</label>
                 <input type="number" id="max-kids" value="3" min="1" max="4">
             </div>
-            <button onclick="initSimulation()">시뮬레이션 실행</button>
+            <button class="run-btn" onclick="initSimulation()">시뮬레이션 실행</button>
         </div>
 
         <div class="content">
@@ -86,8 +81,8 @@
             </div>
 
             <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab(event, 'tab-pedigree')">🌿 가계도 네트워크 구조도</button>
-                <button class="tab-btn" onclick="switchTab(event, 'tab-report')">📊 유전 데이터 분석 리포트</button>
+                <button class="tab-btn active" onclick="switchTab(event, 'tab-pedigree')">가계도 네트워크 구조도</button>
+                <button class="tab-btn" onclick="switchTab(event, 'tab-report')">유전 데이터 분석 리포트</button>
             </div>
 
             <div id="tab-pedigree" class="tab-content active">
@@ -99,12 +94,12 @@
                     <div id="pie-chart" class="chart-box"></div>
                     <div id="bar-chart" class="chart-box"></div>
                 </div>
-                <h3>📋 개체별 유전형 및 알고리즘 판별 리스트</h3>
+                <h3 style="margin-top:20px; color:#2c3e50;">개체별 유전형 및 알고리즘 판별 데이터 목록</h3>
                 <div style="overflow-x:auto;">
                     <table id="data-table">
                         <thead>
                             <tr>
-                                <th>가계도 ID</th><th>세대</th><th>성별</th><th>실제 유전자형</th><th>표현형 상태</th><th>추론 확률</th><th>실제 보인자 여부</th>
+                                <th>가계도 ID</th><th>세대</th><th>성별</th><th>실제 유전자형</th><th>표현형 상태</th><th>알고리즘 추론 확률</th><th>실제 보인자 여부</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -121,16 +116,23 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         evt.currentTarget.classList.add('active');
-        window.dispatchEvent(new Event('resize'));
+        
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 30);
     }
 
-    function mulberry32(a) {
-        return function() {
-          let t = a += 0x6D2B79F5;
-          t = Math.imul(t ^ (t >>> 15), t | 1);
-          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    // 시드 기반 난수 생성기 구현 (파이썬 random.Random 대용)
+    class SeededRandom {
+        constructor(seed) { this.seed = seed; }
+        next() {
+            let t = this.seed += 0x6D2B79F5;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
         }
+        randint(min, max) { return Math.floor(this.next() * (max - min + 1)) + min; }
+        choice(arr) { return arr[Math.floor(this.next() * arr.length)]; }
     }
 
     let nextId = 0;
@@ -142,7 +144,7 @@
         let pid = nextId++;
         let sortedGenotype = [...genotype].sort();
         let phenotype = (sortedGenotype[0] === 'a' && sortedGenotype[1] === 'a') ? 'Affected' : 'Unaffected';
-        let trueCarrier = (sortedGenotype.join('') === 'Aa');
+        let trueCarrier = (sortedGenotype[0] === 'A' && sortedGenotype[1] === 'a') || (sortedGenotype[0] === 'a' && sortedGenotype[1] === 'A');
         
         people[pid] = { pid, sex, genotype: sortedGenotype, generation, phenotype, trueCarrier };
         childrenMap[pid] = [];
@@ -155,18 +157,25 @@
         if(!parentsMap[cId].includes(pId)) parentsMap[cId].push(pId);
     }
 
+    function makeChildGenotype(father, mother, rng) {
+        let paternal = rng.choice(father.genotype);
+        let maternal = rng.choice(mother.genotype);
+        return [paternal, maternal].sort();
+    }
+
     function initSimulation() {
         nextId = 0; people = {}; childrenMap = {}; parentsMap = {};
         
         let seed = parseInt(document.getElementById('seed').value) || 45;
-        let nGens = parseInt(document.getElementById('gens').value) || 4;
+        let nGens = parseInt(document.getElementById('gens').value) || 5;
         let minKids = parseInt(document.getElementById('min-kids').value) || 1;
         let maxKids = parseInt(document.getElementById('max-kids').value) || 3;
         if (minKids > maxKids) maxKids = minKids;
 
-        let rand = mulberry32(seed);
+        let rng = new SeededRandom(seed);
         let familyUnits = [];
 
+        // 창시자 세대 생성 (Aa x Aa)
         let fId = addPerson('M', ['A', 'a'], 0);
         let mId = addPerson('F', ['A', 'a'], 0);
         let currentGenCouples = [[fId, mId]];
@@ -174,24 +183,24 @@
         for (let gen = 1; gen < nGens; gen++) {
             let nextGenCouples = [];
             for (let [fatherId, motherId] of currentGenCouples) {
-                let nKids = Math.floor(rand() * (maxKids - minKids + 1)) + minKids;
+                let father = people[fatherId];
+                let mother = people[motherId];
+                let nKids = rng.randint(minKids, maxKids);
                 let kidsIds = [];
 
                 for (let k = 0; k < nKids; k++) {
-                    let sex = rand() < 0.5 ? 'M' : 'F';
-                    let pGene = people[fatherId].genotype[rand() < 0.5 ? 0 : 1];
-                    let mGene = people[motherId].genotype[rand() < 0.5 ? 0 : 1];
-                    
-                    let childId = addPerson(sex, [pGene, mGene], gen);
+                    let sex = rng.choice(['M', 'F']);
+                    let genotype = makeChildGenotype(father, mother, rng);
+                    let childId = addPerson(sex, genotype, gen);
                     addParentChild(fatherId, childId);
                     addParentChild(motherId, childId);
                     kidsIds.push(childId);
 
                     if (gen < nGens - 1) {
                         let spouseSex = sex === 'M' ? 'F' : 'M';
-                        let r = rand();
-                        let spouseG = r < 0.05 ? ['a', 'a'] : (r < 0.35 ? ['A', 'a'] : ['A', 'A']);
-                        let spouseId = addPerson(spouseSex, spouseG, gen);
+                        let randVal = rng.next();
+                        let spouseGenotype = randVal < 0.05 ? ['a', 'a'] : (randVal < 0.35 ? ['A', 'a'] : ['A', 'A']);
+                        let spouseId = addPerson(spouseSex, spouseGenotype, gen);
 
                         if (sex === 'M') nextGenCouples.push([childId, spouseId]);
                         else nextGenCouples.push([spouseId, childId]);
@@ -203,26 +212,23 @@
             if (currentGenCouples.length === 0) break;
         }
 
+        // 파이썬 로직 동등 DFS 기반 추론 알고리즘
         let inferred = {};
         let affectedIds = Object.keys(people).filter(pid => people[pid].phenotype === 'Affected');
         
         for (let affId of affectedIds) {
             let stack = parentsMap[affId].map(p => [p, 1.0]);
-            let visited = new Set();
+            let localVisited = new Set();
             while(stack.length > 0) {
                 let [pid, prob] = stack.pop();
-                if (visited.has(pid)) continue;
-                visited.add(pid);
+                if (localVisited.has(pid)) continue;
+                localVisited.add(pid);
                 inferred[pid] = Math.max(inferred[pid] || 0.0, prob);
 
-                if (parentsMap[pid]) {
-                    for (let pId of parentsMap[pid]) {
-                        if (!visited.has(pId)) stack.push([pId, prob * 0.5]);
-                        if (childrenMap[pId]) {
-                            for (let sibId of childrenMap[pId]) {
-                                if (!visited.has(sibId) && sibId != pid) stack.push([sibId, prob * 0.5]);
-                            }
-                        }
+                for (let parentId of parentsMap[pid]) {
+                    if (!localVisited.has(parentId)) stack.push([parentId, prob * 0.5]);
+                    for (let sibId of childrenMap[parentId]) {
+                        if (!localVisited.has(sibId) && sibId != pid) stack.push([sibId, prob * 0.5]);
                     }
                 }
             }
@@ -239,55 +245,133 @@
         let carM = pList.filter(p => p.trueCarrier && p.sex === 'M').length;
         let carF = pList.filter(p => p.trueCarrier && p.sex === 'F').length;
 
-        let tp = 0, fp = 0, tn = 0, fn = 0;
+        let tp = 0, tn = 0;
         pList.forEach(p => {
             let pred = (inferred[p.pid] || 0.0) >= 0.5;
             if (pred && p.trueCarrier) tp++;
-            else if (pred && !p.trueCarrier) fp++;
-            else if (!pred && p.trueCarrier) fn++;
-            else tn++;
+            else if (!pred && !p.trueCarrier) tn++;
         });
         let accuracy = nTotal ? ((tp + tn) / nTotal) * 100 : 0;
 
         document.getElementById('m-total').innerText = `${nTotal}명`;
-        document.getElementById('m-affected').innerText = `남: ${affM} / 여: ${affF}`;
-        document.getElementById('m-carrier').innerText = `남: ${carM} / 여: ${carF}`;
+        document.getElementById('m-affected').innerText = `남: ${affM}명 / 여: ${affF}명`;
+        document.getElementById('m-carrier').innerText = `남: ${carM}명 / 여: ${carF}명`;
         document.getElementById('m-accuracy').innerText = `${accuracy.toFixed(1)}%`;
 
+        // 파이썬 고유 안전 레이아웃 알고리즘 이식
         let pos = {};
-        let genCounts = {};
-        pList.forEach(p => {
-            if(!genCounts[p.generation]) genCounts[p.generation] = 0;
-            pos[p.pid] = [genCounts[p.generation] * 5, -p.generation * 4];
-            genCounts[p.generation]++;
+        let childrenOf = {};
+        let spouseOf = {};
+
+        familyUnits.forEach(([gen, f, m, kids]) => {
+            childrenOf[`${f},${m}`] = kids;
+            spouseOf[f] = m;
+            spouseOf[m] = f;
         });
 
-        renderPlots(familyUnits, pos, inferred);
+        let X_GAP = 8, Y_GAP = 6, cursor = 0;
+
+        function placeFamily(father, mother) {
+            let kids = childrenOf[`${father},${mother}`] || [];
+            if (kids.length === 0) {
+                let x = cursor * X_GAP;
+                cursor += 1;
+                let y = -people[father].generation * Y_GAP;
+                pos[father] = [x - 1, y];
+                pos[mother] = [x + 1, y];
+                return x;
+            }
+
+            let childCenters = [];
+            kids.forEach(child => {
+                let spouse = spouseOf[child];
+                if (spouse !== undefined) {
+                    if (people[child].sex === "M") childCenters.push(placeFamily(child, spouse));
+                    else childCenters.push(placeFamily(spouse, child));
+                } else {
+                    let cx = cursor * X_GAP;
+                    cursor += 1;
+                    pos[child] = [cx, -people[child].generation * Y_GAP];
+                    childCenters.push(cx);
+                }
+            });
+
+            let center = (Math.min(...childCenters) + Math.max(...childCenters)) / 2;
+            let y = -people[father].generation * Y_GAP;
+            pos[father] = [center - 1, y];
+            pos[mother] = [center + 1, y];
+            return center;
+        }
+
+        if (familyUnits.length > 0) {
+            let [_, f, m, __] = familyUnits[0];
+            placeFamily(f, m);
+        }
+
+        pList.forEach(p => {
+            if (pos[p.pid] === undefined) {
+                pos[p.pid] = [cursor * X_GAP, -p.generation * Y_GAP];
+                cursor += 1;
+            }
+        });
+
+        // 파이썬 라벨링 알고리즘 이식 (세대-순서 고유 ID 부여)
+        let byGen = {};
+        Object.keys(pos).forEach(pid => {
+            let gen = people[pid].generation;
+            if (!byGen[gen]) byGen[gen] = [];
+            byGen[gen].push([pos[pid][0], pid]);
+        });
+
+        let labels = {};
+        Object.keys(byGen).forEach(gen => {
+            byGen[gen].sort((a, b) => a[0] - b[0]);
+            byGen[gen].forEach((item, idx) => {
+                labels[item[1]] = `${parseInt(gen) + 1}-${idx + 1}`;
+            });
+        });
+
+        renderPlots(familyUnits, pos, labels, inferred);
     }
 
-    function renderPlots(familyUnits, pos, inferred) {
+    function renderPlots(familyUnits, pos, labels, inferred) {
         let edgeX = [], edgeY = [];
-        familyUnits.forEach(([gen, fId, mId, kids]) => {
+
+        // 파이썬 직각 교차형 부모-자식 연결선 연산 구현
+        familyUnits.forEach(([gen, fId, mId, children]) => {
             if (!pos[fId] || !pos[mId]) return;
             let [xf, yf] = pos[fId], [xm, ym] = pos[mId];
+
             edgeX.push(xf, xm, null); edgeY.push(yf, ym, null);
-            let midX = (xf + xm) / 2;
-            kids.forEach(kId => {
-                if (!pos[kId]) return;
-                let [kx, ky] = pos[kId];
-                edgeX.push(midX, kx, null); edgeY.push(yf, ky, null);
+            if (!children || children.length === 0) return;
+
+            let validChildren = children.filter(c => pos[c] !== undefined);
+            if (validChildren.length === 0) return;
+
+            let coupleX = (xf + xm) / 2;
+            let childPoints = validChildren.map(c => pos[c]);
+            let childXs = childPoints.map(p => p[0]);
+            let childYs = childPoints.map(p => p[1]);
+            let childY = childYs.reduce((a, b) => a + b, 0) / childYs.length;
+            let junctionY = yf + (childY - yf) * 0.45;
+
+            edgeX.push(coupleX, coupleX, null); edgeY.push(yf, junctionY, null);
+            edgeX.push(Math.min(...childXs), Math.max(...childXs), null); edgeY.push(junctionY, junctionY, null);
+
+            childPoints.forEach(([cx, cy]) => {
+                edgeX.push(cx, cx, null); edgeY.push(junctionY, cy, null);
             });
         });
 
         let nodeGroups = {
-            "정상 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'white', line:{color:'#2c3e50', width:2}}},
-            "보인자 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'#f1c40f', line:{color:'#d35400', width:2}}},
-            "환자 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'#e74c3c', line:{color:'#c0392b', width:2}}},
-            "추론 보인자 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'white', line:{color:'#3498db', width:2}}},
-            "정상 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'white', line:{color:'#2c3e50', width:2}}},
-            "보인자 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'#f1c40f', line:{color:'#d35400', width:2}}},
-            "환자 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'#e74c3c', line:{color:'#c0392b', width:2}}},
-            "추론 보인자 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'white', line:{color:'#3498db', width:2}}}
+            "정상 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'white', line:{color:'#2c3e50', width:2.5}}},
+            "보인자 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'#f1c40f', line:{color:'#d35400', width:2.5}}},
+            "환자 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'#e74c3c', line:{color:'#c0392b', width:2.5}}},
+            "추론 보인자 남성": {x:[], y:[], text:[], marker:{symbol:'square', color:'white', line:{color:'#3498db', width:2.5}}},
+            "정상 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'white', line:{color:'#2c3e50', width:2.5}}},
+            "보인자 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'#f1c40f', line:{color:'#d35400', width:2.5}}},
+            "환자 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'#e74c3c', line:{color:'#c0392b', width:2.5}}},
+            "추론 보인자 여성": {x:[], y:[], text:[], marker:{symbol:'circle', color:'white', line:{color:'#3498db', width:2.5}}}
         };
 
         let tableBody = "";
@@ -301,8 +385,10 @@
             let status = p.phenotype === 'Affected' ? '환자' : (p.trueCarrier ? '보인자' : '정상');
             
             typeCounts[status]++;
-            let gStr = p.genotype.join('');
+            let gStr = p.genotype.join('').replace("aA", "Aa");
             genotypeCounts[gStr]++;
+
+            let displayId = labels[p.pid] || String(p.pid);
 
             if(p.sex === 'M') {
                 cat = isInfCarrier ? "추론 보인자 남성" : (p.phenotype === 'Affected' ? "환자 남성" : (p.trueCarrier ? "보인자 남성" : "정상 남성"));
@@ -313,10 +399,10 @@
             if (pos[p.pid]) {
                 nodeGroups[cat].x.push(pos[p.pid][0]);
                 nodeGroups[cat].y.push(pos[p.pid][1]);
-                nodeGroups[cat].text.push(`ID: ${p.pid+1}<br>유전형: ${p.genotype.join('')}<br>표현형: ${p.phenotype}`);
+                nodeGroups[cat].text.push(`<b>${displayId}</b><br>성별: ${p.sex}<br>유전자형: ${p.genotype.join('')}<br>표현형: ${p.phenotype}`);
             }
 
-            tableBody += `<tr><td>${p.pid+1}</td><td>${p.generation+1}세대</td><td>${p.sex==='M'?'남성':'여성'}</td><td>${p.genotype.join('')}</td><td>${status}</td><td>${(infProb*100).toFixed(1)}%</td><td>${p.trueCarrier?'True':'False'}</td></tr>`;
+            tableBody += `<tr><td>${displayId}</td><td>${p.generation+1}세대</td><td>${p.sex==='M'?'남성 (M)':'여성 (F)'}</td><td>${gStr}</td><td>${status}</td><td>${(infProb*100).toFixed(1)}%</td><td>${p.trueCarrier?'보인자(True)':'아님(False)'}</td></tr>`;
         });
 
         document.querySelector("#data-table tbody").innerHTML = tableBody;
@@ -326,24 +412,34 @@
             if(group.x.length === 0) continue;
             traces.push({
                 x: group.x, y: group.y, mode: 'markers', name: name, text: group.text, hoverinfo: 'text',
-                marker: Object.assign({size: 20}, group.marker)
+                marker: Object.assign({size: 18}, group.marker)
             });
         }
 
+        // 파이썬 Plotly의 확대, 축소, 드래그 동등 설정 적용
         Plotly.newPlot('pedigree-plot', traces, {
-            xaxis: {visible: false}, yaxis: {visible: false, scaleanchor: "x"},
-            plot_bgcolor: '#f8f9fa', margin: {l:20, r:20, t:20, b:20}, hovermode: 'closest'
+            title: "Autosomal Recessive Pedigree Simulator",
+            xaxis: {visible: false, fixedrange: false}, 
+            yaxis: {visible: false, fixedrange: false, scaleanchor: "x", scaleratio: 1},
+            plot_bgcolor: '#f8f9fa', 
+            margin: {l:40, r:40, t:60, b:40}, 
+            hovermode: 'closest',
+            dragmode: 'pan'
+        }, {
+            scrollZoom: true, 
+            displayModeBar: true, 
+            modeBarButtonsToRemove: ['select2d', 'lasso2d']
         });
 
         Plotly.newPlot('pie-chart', [{
             labels: Object.keys(typeCounts), values: Object.values(typeCounts), type: 'pie', hole: .4,
             marker: {colors: ["#2ecc71", "#f1c40f", "#e74c3c"]}
-        }], {title: "가계 내 표현형 분포 비율", height: 350});
+        }], {title: "가계 내 표현형 분포 비율", height: 350, margin: {l:20, r:20, t:20, b:20}});
 
         Plotly.newPlot('bar-chart', [{
             x: Object.keys(genotypeCounts), y: Object.values(genotypeCounts), type: 'bar',
             marker: {color: ["#34495e", "#f39c12", "#c0392b"]}
-        }], {title: "대립유전형 빈도 분석", height: 350});
+        }], {title: "대립유전형(Genotype) 빈도 분석", height: 350, margin: {l:20, r:20, t:40, b:20}, xaxis:{title:"유전자형"}, yaxis:{title:"개체 수"}});
     }
 
     window.onload = initSimulation;
