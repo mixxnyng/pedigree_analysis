@@ -122,7 +122,6 @@
         }, 30);
     }
 
-    // 시드 기반 난수 생성기 구현 (파이썬 random.Random 대용)
     class SeededRandom {
         constructor(seed) { this.seed = seed; }
         next() {
@@ -144,7 +143,7 @@
         let pid = nextId++;
         let sortedGenotype = [...genotype].sort();
         let phenotype = (sortedGenotype[0] === 'a' && sortedGenotype[1] === 'a') ? 'Affected' : 'Unaffected';
-        let trueCarrier = (sortedGenotype[0] === 'A' && sortedGenotype[1] === 'a') || (sortedGenotype[0] === 'a' && sortedGenotype[1] === 'A');
+        let trueCarrier = (sortedGenotype[0] === 'A' && sortedGenotype[1] === 'a');
         
         people[pid] = { pid, sex, genotype: sortedGenotype, generation, phenotype, trueCarrier };
         childrenMap[pid] = [];
@@ -175,7 +174,6 @@
         let rng = new SeededRandom(seed);
         let familyUnits = [];
 
-        // 창시자 세대 생성 (Aa x Aa)
         let fId = addPerson('M', ['A', 'a'], 0);
         let mId = addPerson('F', ['A', 'a'], 0);
         let currentGenCouples = [[fId, mId]];
@@ -212,7 +210,6 @@
             if (currentGenCouples.length === 0) break;
         }
 
-        // 파이썬 로직 동등 DFS 기반 추론 알고리즘
         let inferred = {};
         let affectedIds = Object.keys(people).filter(pid => people[pid].phenotype === 'Affected');
         
@@ -258,7 +255,7 @@
         document.getElementById('m-carrier').innerText = `남: ${carM}명 / 여: ${carF}명`;
         document.getElementById('m-accuracy').innerText = `${accuracy.toFixed(1)}%`;
 
-        // 파이썬 고유 안전 레이아웃 알고리즘 이식
+        // 가계도 표준 규칙용 좌표 연산 로직 (겹침 전면 수정)
         let pos = {};
         let childrenOf = {};
         let spouseOf = {};
@@ -269,7 +266,7 @@
             spouseOf[m] = f;
         });
 
-        let X_GAP = 8, Y_GAP = 6, cursor = 0;
+        let X_GAP = 12, Y_GAP = 8, cursor = 0;
 
         function placeFamily(father, mother) {
             let kids = childrenOf[`${father},${mother}`] || [];
@@ -277,8 +274,8 @@
                 let x = cursor * X_GAP;
                 cursor += 1;
                 let y = -people[father].generation * Y_GAP;
-                pos[father] = [x - 1, y];
-                pos[mother] = [x + 1, y];
+                pos[father] = [x - 2, y];
+                pos[mother] = [x + 2, y];
                 return x;
             }
 
@@ -298,8 +295,8 @@
 
             let center = (Math.min(...childCenters) + Math.max(...childCenters)) / 2;
             let y = -people[father].generation * Y_GAP;
-            pos[father] = [center - 1, y];
-            pos[mother] = [center + 1, y];
+            pos[father] = [center - 2, y];
+            pos[mother] = [center + 2, y];
             return center;
         }
 
@@ -315,7 +312,6 @@
             }
         });
 
-        // 파이썬 라벨링 알고리즘 이식 (세대-순서 고유 ID 부여)
         let byGen = {};
         Object.keys(pos).forEach(pid => {
             let gen = people[pid].generation;
@@ -337,17 +333,19 @@
     function renderPlots(familyUnits, pos, labels, inferred) {
         let edgeX = [], edgeY = [];
 
-        // 파이썬 직각 교차형 부모-자식 연결선 연산 구현
+        // 표준 가계도 직각 구조 꺾임선 드로잉 연산
         familyUnits.forEach(([gen, fId, mId, children]) => {
             if (!pos[fId] || !pos[mId]) return;
             let [xf, yf] = pos[fId], [xm, ym] = pos[mId];
 
+            // 부부간 수평 결혼선 연결
             edgeX.push(xf, xm, null); edgeY.push(yf, ym, null);
             if (!children || children.length === 0) return;
 
             let validChildren = children.filter(c => pos[c] !== undefined);
             if (validChildren.length === 0) return;
 
+            // 부부 정중앙에서 자녀 분기선 드롭다운
             let coupleX = (xf + xm) / 2;
             let childPoints = validChildren.map(c => pos[c]);
             let childXs = childPoints.map(p => p[0]);
@@ -412,11 +410,10 @@
             if(group.x.length === 0) continue;
             traces.push({
                 x: group.x, y: group.y, mode: 'markers', name: name, text: group.text, hoverinfo: 'text',
-                marker: Object.assign({size: 18}, group.marker)
+                marker: Object.assign({size: 20}, group.marker)
             });
         }
 
-        // 파이썬 Plotly의 확대, 축소, 드래그 동등 설정 적용
         Plotly.newPlot('pedigree-plot', traces, {
             title: "Autosomal Recessive Pedigree Simulator",
             xaxis: {visible: false, fixedrange: false}, 
